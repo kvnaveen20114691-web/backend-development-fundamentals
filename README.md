@@ -107,7 +107,7 @@ Displays the current date and time.
 
 Demonstrates the response returned for an unknown route.
 
-![404 Error Handling](screenshots/04-Not-found.png)
+![404 Error Handling](screenshots/04-Not_found.png)
 
 ## Concepts Learned
 
