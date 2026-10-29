@@ -89,25 +89,25 @@ Open the following URL in your browser:
 
 Displays the welcome message from the Express server.
 
-![Welcome Route](screenshots/01-welcome.png)
+![Welcome Route](screenshots/01-Welcome.png)
 
 ### 2. About Route
 
 Displays the student's name and section as JSON.
 
-![About Route](screenshots/02-about.png)
+![About Route](screenshots/02-About.png)
 
 ### 3. Time Route
 
 Displays the current date and time.
 
-![Time Route](screenshots/03-time.png)
+![Time Route](screenshots/03-Time.png)
 
 ### 4. 404 Error Handling
 
 Demonstrates the response returned for an unknown route.
 
-![404 Error Handling](screenshots/04-not-found.png)
+![404 Error Handling](screenshots/04-Not-found.png)
 
 ## Concepts Learned
 
