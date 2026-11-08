@@ -1,146 +1,117 @@
-# Lab 1: Node.js and Express Server
+# Lab 3: REST API – Query Parameters, Validation and Debugging
 
-## Student Details
+## Project Overview
 
-- **Name:** K.V. Naveen
-- **Registration Number:** 252U1R8037
-- **Section:** [CSE-QE-2A]
-- **Course:** Backend Development Fundamentals
-- **Institution:** Aurora University
+This project implements a REST API for managing a library's book collection using Node.js, Express.js and SQLite.
 
-## Objective
-
-To create a web server using the built-in Node.js HTTP module and then rewrite it using Express.js. The server provides a welcome message, student information, current date and time, and a 404 response for unknown routes.
+The API supports retrieving, searching, sorting, filtering, adding, updating and deleting books.
 
 ## Technologies Used
 
 - Node.js
 - Express.js
+- SQLite
 - JavaScript
-- Visual Studio Code
-- npm (Node Package Manager)
+- npm
+- Postman
+- Git and GitHub
+- Render (Deployment)
 
 ## Project Structure
 
 ```text
-BDF_Lab_01/
+Lab-3/
+├── .postman/
+├── postman/
 ├── screenshots/
-│   ├── 01-welcome.png
-│   ├── 02-about.png
-│   ├── 03-time.png
-│   └── 04-not-found.png
-├── node_modules/
 ├── app.js
-├── server.js
+├── books.db
 ├── package.json
 ├── package-lock.json
-├── .gitignore
 └── README.md
 ```
 
 ## Installation and Execution
 
-### Prerequisites
-
-Install Node.js and npm.
-
 ### 1. Install dependencies
-
-Open the terminal in the project directory and run:
 
 ```bash
 npm install
 ```
 
-### 2. Run the Node.js HTTP server
+### 2. Start the application
 
 ```bash
-node server.js
+npm start
 ```
 
-The server responds with `Hello` at:
+The local server runs on:
 
 `http://localhost:3000`
 
-Stop this server with `Ctrl + C` before starting the Express server.
+## API Endpoints
 
-### 3. Run the Express server
+Base URL:
 
-```bash
-node app.js
-```
+`https://pageturn-library-api.onrender.com`
 
-Open the following URL in your browser:
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/books` | Retrieve all books |
+| GET | `/books?search_q=Deep` | Search books by title |
+| GET | `/books?order_by=price&order=ASC` | Sort books |
+| GET | `/books?limit=5&offset=0` | Paginate book results |
+| GET | `/books?min_price=100&max_price=500` | Filter by price |
+| GET | `/books/:id` | Retrieve a book by ID |
+| POST | `/books` | Add a new book |
+| PUT | `/books/:id` | Update a book |
+| DELETE | `/books/:id` | Delete a book |
 
-`http://localhost:3000`
+## Features Implemented
 
-## Endpoints
+- RESTful API design using Express.js.
+- Query parameter handling.
+- Partial title search using SQL LIKE.
+- Sorting with ascending and descending order.
+- Pagination using limit and offset.
+- Minimum and maximum price filtering.
+- Request body validation.
+- Appropriate HTTP status codes.
+- Consistent JSON error responses.
+- SQLite database integration.
+- Error handling and debugging.
 
-| HTTP Method | Endpoint | Description | Expected Status |
-|---|---|---|---|
-| GET | `/` | Displays the welcome message | 200 OK |
-| GET | `/about` | Returns the student's name and section in JSON format | 200 OK |
-| GET | `/time` | Returns the current date and time in JSON format | 200 OK |
-| GET | `/hello123` | Demonstrates 404 handling for an unknown route | 404 Not Found |
+## Testing with Postman
 
-## Screenshots
+The API was tested using Postman.
 
-### 1. Welcome Route
+The test cases cover:
 
-Displays the welcome message from the Express server.
+- Retrieving all books.
+- Searching and sorting books.
+- Pagination and price filtering.
+- Creating books with valid and invalid data.
+- Retrieving books by ID.
+- Updating existing books.
+- Deleting books.
+- Handling missing book IDs and invalid requests.
 
-![Welcome Route](screenshots/01-Welcome.png)
+### Screenshots
 
-### 2. About Route
+The `screenshots/` folder contains 25 Postman screenshots demonstrating successful and unsuccessful test cases.
 
-Displays the student's name and section as JSON.
+## Deployment
 
-![About Route](screenshots/02-About.png)
+The REST API is deployed using Render.
 
-### 3. Time Route
+**Live API URL:**
 
-Displays the current date and time.
+https://pageturn-library-api.onrender.com/books
 
-![Time Route](screenshots/03-Time.png)
+**GitHub Repository:**
 
-### 4. 404 Error Handling
-
-Demonstrates the response returned for an unknown route.
-
-![404 Error Handling](screenshots/04-Not_found.png)
-
-## Concepts Learned
-
-- Initializing a Node.js project using `npm init -y`.
-- Understanding `package.json` and `node_modules`.
-- Creating a server using Node.js's built-in HTTP module.
-- Installing and using Express.js.
-- Defining GET routes with `app.get()`.
-- Using request (`req`) and response (`res`) objects.
-- Returning JSON responses with `res.json()`.
-- Using HTTP status codes.
-- Handling unknown routes with a 404 response.
-
-## Problems Faced and Solutions
-
-### 1. PowerShell Execution Policy
-
-**Problem:** PowerShell blocked the `npm.ps1` script because script execution was disabled.
-
-**Solution:** Used `npm.cmd` to execute npm commands without changing the PowerShell execution policy.
-
-### 2. Port 3000 Already in Use
-
-**Problem:** The previous Node.js server was already using port 3000.
-
-**Solution:** Stopped the previous server process before starting the Express server.
+https://github.com/kvnaveen20114691-web/backend-development-fundamentals
 
 ## Conclusion
 
-Successfully created and tested a basic HTTP server using Node.js and an Express server with the required routes. Verified the welcome, about, and time endpoints, and implemented 404 error handling for unknown routes. This lab provided practical experience with server creation, routing, HTTP responses, and npm package management.
-
-## Repository
-
-**GitHub Repository:** [https://github.com/kvnaveen20114691-web/backend-development-fundamentals]
-
-**Live Deployment:** [(https://bdf-lab-01-72y4.onrender.com/)].
+Successfully developed and deployed a REST API for managing library books using Node.js, Express.js and SQLite. Implemented query parameters, searching, sorting, pagination, price filtering, validation, CRUD operations and error handling. Tested the API using Postman and deployed it on Render.
