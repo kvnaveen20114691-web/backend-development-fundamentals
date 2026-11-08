@@ -1,9 +1,9 @@
-
 {
-  "name": "lab-02",
+  "name": "lab-03",
   "version": "1.0.0",
-  "description": "Lab 2 - SQLite database and CRUD routes",
+  "description": "Lab 3 - SQLite book catalog API",
   "main": "app.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"

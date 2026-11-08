@@ -11,6 +11,7 @@ const dbPath = path.join(__dirname, "books.db");
 
 let db;
 
+// Initialize database and start server
 async function initializeDBAndServer() {
   try {
     db = await open({
@@ -28,7 +29,9 @@ async function initializeDBAndServer() {
       );
     `);
 
-    const result = await db.get("SELECT COUNT(*) AS count FROM book");
+    const result = await db.get(
+      "SELECT COUNT(*) AS count FROM book"
+    );
 
     if (result.count === 0) {
       await db.run(`
@@ -47,19 +50,25 @@ async function initializeDBAndServer() {
       `);
     }
 
-    app.listen(3000, () => {
-      console.log("Server running at http://localhost:3000/");
+    const port = process.env.PORT || 3000;
+
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}/`);
       console.log("SQLite database connected successfully");
     });
+
   } catch (error) {
     console.error("Initialization error:", error.message);
     process.exit(1);
   }
 }
 
+// Helper function to validate book ID
+function isValidBookId(bookId) {
+  return /^\d+$/.test(bookId) && Number(bookId) > 0;
+}
 
-/* GET all books with search, sorting, pagination and price filtering */
-
+// GET all books with search, sorting, pagination and price filtering
 app.get("/books/", async (request, response) => {
   try {
     const {
@@ -69,28 +78,49 @@ app.get("/books/", async (request, response) => {
       limit = "10",
       offset = "0",
       min_price,
-      max_price
+      max_price,
     } = request.query;
 
-    // 1. Validate sorting column
-    const allowedColumns = ["id", "title", "author", "price", "pages"];
-
-    if (!allowedColumns.includes(order_by)) {
+    // Validate query parameter types
+    if (
+      typeof search_q !== "string" ||
+      typeof order_by !== "string" ||
+      typeof order !== "string" ||
+      typeof limit !== "string" ||
+      typeof offset !== "string" ||
+      (min_price !== undefined && typeof min_price !== "string") ||
+      (max_price !== undefined && typeof max_price !== "string")
+    ) {
       return response.status(400).json({
-        message: "Invalid order_by column"
+        message: "Query parameters must contain single valid values",
       });
     }
 
-    // 2. Validate sorting order
+    // Validate sorting column
+    const allowedColumns = [
+      "id",
+      "title",
+      "author",
+      "price",
+      "pages",
+    ];
+
+    if (!allowedColumns.includes(order_by)) {
+      return response.status(400).json({
+        message: "Invalid order_by column",
+      });
+    }
+
+    // Validate sorting order
     const sortOrder = order.toUpperCase();
 
     if (!["ASC", "DESC"].includes(sortOrder)) {
       return response.status(400).json({
-        message: "Order must be ASC or DESC"
+        message: "Order must be ASC or DESC",
       });
     }
 
-    // 3. Validate limit and offset
+    // Validate limit and offset
     const pageLimit = Number(limit);
     const pageOffset = Number(offset);
 
@@ -101,11 +131,11 @@ app.get("/books/", async (request, response) => {
       pageOffset < 0
     ) {
       return response.status(400).json({
-        message: "Invalid limit or offset"
+        message: "Limit must be a positive integer and offset must be a non-negative integer",
       });
     }
 
-    // 4. Validate price range
+    // Validate price range
     let minPrice;
     let maxPrice;
 
@@ -114,7 +144,7 @@ app.get("/books/", async (request, response) => {
 
       if (!Number.isFinite(minPrice) || minPrice < 0) {
         return response.status(400).json({
-          message: "Invalid minimum price"
+          message: "Invalid minimum price",
         });
       }
     }
@@ -124,7 +154,7 @@ app.get("/books/", async (request, response) => {
 
       if (!Number.isFinite(maxPrice) || maxPrice < 0) {
         return response.status(400).json({
-          message: "Invalid maximum price"
+          message: "Invalid maximum price",
         });
       }
     }
@@ -135,15 +165,15 @@ app.get("/books/", async (request, response) => {
       minPrice > maxPrice
     ) {
       return response.status(400).json({
-        message: "Minimum price cannot exceed maximum price"
+        message: "Minimum price cannot exceed maximum price",
       });
     }
 
-    // 5. Build SQL query
+    // Build SQL query
     let sql = "SELECT * FROM book WHERE 1=1";
     const values = [];
 
-    // Search books by partial title
+    // Search by partial book title
     if (search_q.trim() !== "") {
       sql += " AND title LIKE ?";
       values.push(`%${search_q.trim()}%`);
@@ -168,29 +198,33 @@ app.get("/books/", async (request, response) => {
     sql += " LIMIT ? OFFSET ?";
     values.push(pageLimit, pageOffset);
 
-    // Execute query
     const books = await db.all(sql, values);
 
-    response.status(200).json({
+    return response.status(200).json({
       message: "Books retrieved successfully",
       count: books.length,
-      data: books
+      data: books,
     });
 
   } catch (error) {
     console.error("GET books error:", error.message);
 
-    response.status(500).json({
-      message: "Failed to retrieve books"
+    return response.status(500).json({
+      message: "Failed to retrieve books",
     });
   }
 });
 
-
-/* GET a single book by ID */
+// GET a single book by ID
 app.get("/books/:bookId/", async (request, response) => {
   try {
     const { bookId } = request.params;
+
+    if (!isValidBookId(bookId)) {
+      return response.status(400).json({
+        message: "Invalid book ID",
+      });
+    }
 
     const book = await db.get(
       "SELECT * FROM book WHERE id = ?",
@@ -198,28 +232,44 @@ app.get("/books/:bookId/", async (request, response) => {
     );
 
     if (!book) {
-      return response.status(404).json({  message: "Book not found"  });
+      return response.status(404).json({
+        message: "Book not found",
+      });
     }
 
-    response.status(200).json(book);
+    return response.status(200).json({
+      message: "Book retrieved successfully",
+      data: book,
+    });
+
   } catch (error) {
-    response.status(500).json({  message: "Failed to retrieve book"  });
+    console.error("GET book error:", error.message);
+
+    return response.status(500).json({
+      message: "Failed to retrieve book",
+    });
   }
 });
 
-/* POST a new book */
+// POST a new book
 app.post("/books/", async (request, response) => {
   try {
-    const { title, author, price, pages } = request.body;
+    const { title, author, price, pages } = request.body || {};
 
     if (
-      typeof title !== "string" || !title.trim() ||
-      typeof author !== "string" || !author.trim() ||
-      typeof price !== "number" || !Number.isInteger(price) || price < 0 ||
-      !Number.isInteger(pages) || pages <= 0
+      typeof title !== "string" ||
+      !title.trim() ||
+      typeof author !== "string" ||
+      !author.trim() ||
+      typeof price !== "number" ||
+      !Number.isInteger(price) ||
+      price < 0 ||
+      typeof pages !== "number" ||
+      !Number.isInteger(pages) ||
+      pages <= 0
     ) {
       return response.status(400).json({
-        message: "Provide a title, author, non-negative integer price, and positive integer pages"
+        message: "Provide a title, author, non-negative integer price, and positive integer pages",
       });
     }
 
@@ -231,30 +281,44 @@ app.post("/books/", async (request, response) => {
 
     return response.status(201).json({
       message: "Book added successfully",
-      bookId: result.lastID
+      bookId: result.lastID,
     });
+
   } catch (error) {
     console.error("POST books error:", error.message);
+
     return response.status(500).json({
-      message: "Failed to add book"
+      message: "Failed to add book",
     });
   }
 });
 
-/* PUT: update a book by ID */
+// PUT: update a book by ID
 app.put("/books/:bookId/", async (request, response) => {
   try {
     const { bookId } = request.params;
-    const { title, author, price, pages } = request.body;
+    const { title, author, price, pages } = request.body || {};
+
+    if (!isValidBookId(bookId)) {
+      return response.status(400).json({
+        message: "Invalid book ID",
+      });
+    }
 
     if (
-      typeof title !== "string" || !title.trim() ||
-      typeof author !== "string" || !author.trim() ||
-      !Number.isInteger(price) || price < 0 ||
-      !Number.isInteger(pages) || pages <= 0
+      typeof title !== "string" ||
+      !title.trim() ||
+      typeof author !== "string" ||
+      !author.trim() ||
+      typeof price !== "number" ||
+      !Number.isInteger(price) ||
+      price < 0 ||
+      typeof pages !== "number" ||
+      !Number.isInteger(pages) ||
+      pages <= 0
     ) {
       return response.status(400).json({
-        error: "Provide a title, author, non-negative integer price, and positive integer pages"
+        message: "Provide a title, author, non-negative integer price, and positive integer pages",
       });
     }
 
@@ -266,19 +330,34 @@ app.put("/books/:bookId/", async (request, response) => {
     );
 
     if (result.changes === 0) {
-      return response.status(404).json({ message: "Book not found" });
+      return response.status(404).json({
+        message: "Book not found",
+      });
     }
 
-    response.status(200).json({ message: "Book updated successfully" });
+    return response.status(200).json({
+      message: "Book updated successfully",
+    });
+
   } catch (error) {
-    return response.status(500).json({ message: "Failed to update book" });
+    console.error("PUT book error:", error.message);
+
+    return response.status(500).json({
+      message: "Failed to update book",
+    });
   }
 });
 
-/* DELETE a book by ID */
+// DELETE a book by ID
 app.delete("/books/:bookId/", async (request, response) => {
   try {
     const { bookId } = request.params;
+
+    if (!isValidBookId(bookId)) {
+      return response.status(400).json({
+        message: "Invalid book ID",
+      });
+    }
 
     const result = await db.run(
       "DELETE FROM book WHERE id = ?",
@@ -286,14 +365,23 @@ app.delete("/books/:bookId/", async (request, response) => {
     );
 
     if (result.changes === 0) {
-      return response.status(404).json({ message: "Book not found" });
+      return response.status(404).json({
+        message: "Book not found",
+      });
     }
 
-    response.status(200).json({ message: "Book deleted successfully" });
+    return response.status(200).json({
+      message: "Book deleted successfully",
+    });
+
   } catch (error) {
-    return response.status(500).json({ message: "Failed to delete book" });
+    console.error("DELETE book error:", error.message);
+
+    return response.status(500).json({
+      message: "Failed to delete book",
+    });
   }
 });
 
-
+// Start the application
 initializeDBAndServer();
